@@ -39,31 +39,9 @@ module.exports = function Scrapper(url, options = {}, callback) {
           const charset = res.headers["content-type"].match(/charset=([\w-]+)/);
           result = JSON.parse(data.toString(charset[1]));
         }
-        if (options.html) {
+        if (res.headers["content-type"].indexOf("text/html") !== -1) {
           const dom = new JSDOM(data);
-          const { document } = dom.window;
-          const allTabs = document.querySelectorAll(".wikitable");
-          let codeTab = [];
-          let textTab = [];
-          for (var i = 0; i < allTabs.length; ++i) {
-            const temp = allTabs[i].querySelectorAll("tr");
-            for (var j = 0; j < temp.length - 1; j++) {
-              textTab = [
-                ...textTab,
-                temp[j + 1].querySelectorAll("td")[0].textContent?.slice(0, -1),
-              ];
-              codeTab = [
-                ...codeTab,
-                temp[j + 1].querySelectorAll("th")[0].textContent?.slice(0, -1),
-              ];
-            }
-          }
-          result = codeTab.map((code, index) => {
-            return {
-              code,
-              text: textTab[index],
-            };
-          });
+          result = dom.window.document;
         }
         // Traiter la réponse
         callback({ status: res.statusCode, result });
